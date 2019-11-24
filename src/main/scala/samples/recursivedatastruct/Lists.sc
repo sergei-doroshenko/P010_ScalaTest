@@ -25,3 +25,6 @@ def sum(list: List[Int]): Int = {
 }
 
 sum(List(1, 2, 3, 4, 5))
+
+val lol = List(List(1,2), List(3,4))
+val result = lol.flatten

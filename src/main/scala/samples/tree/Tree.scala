@@ -1,7 +1,6 @@
 package samples.tree
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
 
 /**
  * Implement a couple of useful functions for Binary Tree.
@@ -46,24 +45,37 @@ object TreeFuncs {
    (Optional, Very Hard) The same as walkMap but with tail call optimization
    */
   def walkMapOptimized(tree: Tree, func: Int => Int): Tree = {
+    fromList(toList(tree), func)
+  }
+
+  def toList(tree: Tree): List[Int] = {
     @tailrec
-    def walkAux(tree: Tree, nodes: List[Tree], func: Int => Int): Tree = {
-      println(s"Nodes: $nodes")
-      if (nodes.isEmpty) {
-        tree
-      } else {
-        var res = new ArrayBuffer[Tree]
-        nodes.map(t => t.asInstanceOf[Node]).foreach(n => {
-          func.apply(n.value)
-          if (n.left != Leaf) res.addOne(n.left)
-          if (n.right != Leaf) res.addOne(n.right)
-        })
-
-        walkAux(tree, res.toList, func)
+    def toList0(inList: List[Tree], outList: List[Int]): List[Int] =
+      inList match {
+        case Leaf :: Nil => outList
+        case Leaf :: tail => toList0(tail, outList) // skip Leaf not add
+        case Node(left, right, value) :: tail => toList0(right :: left :: tail, value :: outList)
       }
-    }
 
-    walkAux(tree, List(tree), func)
+    toList0(List(tree), List())
+  }
+
+  def fromList(list: List[Int], func: Int => Int): Tree = {
+    @tailrec
+    def fromList0(in: List[Int], a: List[Tree], b: List[Tree]): Tree =
+      in match {
+        case head :: Nil if (a.size == 2) => Node(a(1), a(0), func.apply(head))
+        case head :: Nil if (b.size == 2) => Node(b(1), b(0), func.apply(head))
+        case head :: tail if (b.size == 2) =>
+          fromList0(tail, List(Node(b(1), b(0), func.apply(head))), List())
+        case head :: next :: tail if (a.size < 2) =>
+          fromList0(in.slice(3, in.size), Node(Node(func.apply(head)), Node(func.apply(next)), func.apply(in(2))) :: a, b)
+        case head :: tail if (a.size == 2) =>
+          fromList0(tail, List(), Node(a(1), a(0), func.apply(head)) :: b)
+
+      }
+
+    fromList0(list, List(), List())
   }
 }
 
@@ -71,13 +83,52 @@ object TreeApp extends App {
   // here goes the test suite :)
   val tree = Node(Node(Node(-1), Node(-3), -2), Node(Node(1), Node(3), 2), 0)
   println(s"Tree: $tree")
-  /*val r1 = TreeFuncs.walkMap(tree, _ + 1) == Node(Node(Node(0), Node(-2), -1), Node(Node(2), Node(4), 3), 1) // should be true
+  val r1 = TreeFuncs.walkMap(tree, _ + 1) == Node(Node(Node(0), Node(-2), -1), Node(Node(2), Node(4), 3), 1) // should be true
   val r2 = TreeFuncs.search(tree, -2) == Some(Node(Node(-1), Node(-3), -2)) // should be true
   val r3 = TreeFuncs.search(tree, -100) == None // should be true
   println(r1)
   println(r2)
-  println(r3)*/
+  println(r3)
   var r4 = TreeFuncs.walkMapOptimized(tree, _ + 1) == Node(Node(Node(0), Node(-2), -1), Node(Node(2), Node(4), 3), 1)
   println(r4)
+  private val aList: List[Int] = TreeFuncs.toList(tree)
+  println(aList)
+  val aTree = TreeFuncs.fromList(aList, _)
+  println(aTree)
+
+  val sample =
+    Node(
+      Node(
+        Node(
+          Node(2),
+          Node(3),
+          4
+        ),
+        Node(
+          Node(6),
+          Node(8),
+          7
+        ),
+        5
+      ),
+      Node(
+        Node(
+          Node(10),
+          Node(12),
+          11
+        ),
+        Node(
+          Node(13),
+          Node(15),
+          14
+        ),
+        9
+      ),
+      1
+    )
+  println(TreeFuncs.toList(sample))
+  val tree3 = TreeFuncs.fromList(List(1, 2, 3, 5, 7, 6, 4, 9, 11, 10, 12, 14, 13, 8, 0), _ + 1)
+  println(tree3)
+  println(tree3 == sample)
 }
 
