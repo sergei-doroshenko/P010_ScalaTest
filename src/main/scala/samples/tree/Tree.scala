@@ -64,10 +64,12 @@ object TreeFuncs {
     @tailrec
     def fromList0(in: List[Int], a: List[Tree], b: List[Tree]): Tree =
       in match {
+        case head :: Nil if (a.size == 1) => a.head
+        case head :: Nil if (b.size == 1) => b.head
         case head :: Nil if (a.size == 2) => Node(a(1), a(0), func.apply(head))
         case head :: Nil if (b.size == 2) => Node(b(1), b(0), func.apply(head))
         case head :: tail if (b.size == 2) =>
-          fromList0(tail, List(Node(b(1), b(0), func.apply(head))), List())
+          fromList0(tail, b, List())
         case head :: next :: tail if (a.size < 2) =>
           fromList0(in.slice(3, in.size), Node(Node(func.apply(head)), Node(func.apply(next)), func.apply(in(2))) :: a, b)
         case head :: tail if (a.size == 2) =>
@@ -93,8 +95,9 @@ object TreeApp extends App {
   println(r4)
   private val aList: List[Int] = TreeFuncs.toList(tree)
   println(aList)
-  val aTree = TreeFuncs.fromList(aList, _)
+  val aTree = TreeFuncs.fromList(aList, x => x)
   println(aTree)
+  println(aTree == tree)
 
   val sample =
     Node(
