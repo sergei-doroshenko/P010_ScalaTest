@@ -1,5 +1,7 @@
 package samples.tree
 
+import samples.tree2.{Branch, Leaf2, Tree2}
+
 import scala.annotation.tailrec
 
 /**
@@ -79,6 +81,18 @@ object TreeFuncs {
 
     fromList0(list, List(), List())
   }
+
+  def size(t: Tree): Int = {
+    @tailrec
+    def size0(l: List[Tree], acc: Int): Int =
+      l match {
+        case Nil => acc
+        case Leaf :: ls => size0(ls, acc + 1)
+        case Node(a, b, _) :: ls => size0(a :: b :: ls, acc + 1)
+      }
+
+    size0(List(t), acc = 0)
+  }
 }
 
 object TreeApp extends App {
@@ -130,6 +144,9 @@ object TreeApp extends App {
       1
     )
   println(TreeFuncs.toList(sample))
+  val size = TreeFuncs.size(tree)
+  println(s"Tree size: $size")
+  println(size == 15)
   val tree3 = TreeFuncs.fromList(List(1, 2, 3, 5, 7, 6, 4, 9, 11, 10, 12, 14, 13, 8, 0), _ + 1)
   println(tree3)
   println(tree3 == sample)
