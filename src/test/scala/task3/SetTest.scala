@@ -29,6 +29,7 @@ class SetTest extends FunSuite with Matchers {
   test("when the element is not in the set") {
     val set = Set.fromList(List(Weekday.Monday, Weekday.Tuesday, Weekday.Wednesday))
     Set.contains(Weekday.Thursday, set) should be(false)
+    Set.contains(Weekday.Tuesday, set) should be(true)
   }
 
   // Subset test cases - A set is a subset if all of its elements are contained in the other set
