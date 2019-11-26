@@ -1,7 +1,5 @@
 package samples.tree
 
-import samples.tree2.{Branch, Leaf2, Tree2}
-
 import scala.annotation.tailrec
 
 /**
