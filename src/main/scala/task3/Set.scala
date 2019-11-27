@@ -51,7 +51,12 @@ object Set {
     }
   }
 
-  def remove(day: Weekday.Value, set: Set): Set = ???
+  def remove(day: Weekday.Value, set: Set): Set = set match {
+    case set if !Set.contains(day, set) => set
+    case _ => x =>
+      if (x == day) false
+      else set(x)
+  }
 
   def contains(day: Weekday.Value, set: Set): Boolean = set match {
     case Set.empty => false

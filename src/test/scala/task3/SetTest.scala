@@ -169,6 +169,22 @@ class SetTest extends FunSuite with Matchers {
     Set.isEqual(Set.remove(Weekday.Wednesday, set), expected) should be(true)
   }
 
+  test("remove from non-empty set - custom") {
+    val set = Set.fromList(List(Weekday.Monday, Weekday.Tuesday, Weekday.Wednesday, Weekday.Thursday))
+    val updated = Set.remove(Weekday.Wednesday, set)
+    Set.contains(Weekday.Monday, updated) should be(true)
+    Set.contains(Weekday.Tuesday, updated) should be(true)
+    Set.contains(Weekday.Thursday, updated) should be(true)
+    Set.contains(Weekday.Wednesday, updated) should be(false) // was removed
+
+    val updated2 = Set.insert(Weekday.Wednesday, updated)
+
+    Set.contains(Weekday.Monday, updated2) should be(true)
+    Set.contains(Weekday.Tuesday, updated2) should be(true)
+    Set.contains(Weekday.Thursday, updated2) should be(true)
+    Set.contains(Weekday.Wednesday, updated2) should be(true) // was again inserted
+  }
+
   test("removing a non-existing element does not change the set") {
     val set = Set.fromList(List(Weekday.Monday, Weekday.Tuesday, Weekday.Wednesday))
     val expected = Set.fromList(List(Weekday.Monday, Weekday.Tuesday, Weekday.Wednesday))
