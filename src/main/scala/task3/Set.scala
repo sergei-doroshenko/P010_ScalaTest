@@ -24,11 +24,11 @@ object Set {
     if (contains(day, set)) set else insert(day, set)
   }
 
-  def union(left: Set, right: Set): Set = ???
+  def union(left: Set, right: Set): Set = x => left(x) || right(x)
 
-  def difference(left: Set, right: Set): Set = ???
+  def difference(left: Set, right: Set): Set = x => left(x) && !right(x)
 
-  def intersection(left: Set, right: Set): Set = ???
+  def intersection(left: Set, right: Set): Set = x => left(x) && right(x)
 
   def insert(day: Weekday.Value, set: Set): Set = set match {
     case set if Set.contains(day, set) => set
@@ -73,8 +73,13 @@ object Set {
     Weekday.values.filter(v => left(v) != right(v)).isEmpty
   }
 
-  def isSubsetOf(left: Set, right: Set): Boolean = ???
+  def isSubsetOf(left: Set, right: Set): Boolean = {
+    Weekday.values.filter(v => left(v)).subsetOf(Weekday.values.filter(x => right(x)))
+  }
 
-  def isDisjointFrom(left: Set, right: Set): Boolean = ???
+  // In mathematics, two sets are said to be disjoint sets if they have no element in common.
+  def isDisjointFrom(left: Set, right: Set): Boolean = {
+    Weekday.values.filter(v => left(v) && right(v)).isEmpty
+  }
 
 }
