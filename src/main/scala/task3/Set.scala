@@ -69,7 +69,9 @@ object Set {
       case _ => false
     }
 
-  def isEqual(left: Set, right: Set): Boolean = ???
+  def isEqual(left: Set, right: Set): Boolean = {
+    Weekday.values.filter(v => left(v) != right(v)).isEmpty
+  }
 
   def isSubsetOf(left: Set, right: Set): Boolean = ???
 
