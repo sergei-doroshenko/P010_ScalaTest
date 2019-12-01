@@ -1,7 +1,7 @@
 package task4.urlPackage
 
 import scalaBasic.urlPackage.{Read, Show}
-import task4.urlPackage.Url.ops.{HttpUrl, Query}
+import task4.urlPackage.Url.ops.{Query, WithoutProtocolUrl}
 
 /*
  * Task is to get practice in ADT and type classes.
@@ -22,19 +22,7 @@ import task4.urlPackage.Url.ops.{HttpUrl, Query}
 
 // Make Url type more strict, rewrite it as Algebraic Data Type
 //case class Url(protocol: String, username: String, password: String, host: String, path: String, query: String)
-sealed trait Url {
-  def protocol: String
-
-  def username: String
-
-  def password: String
-
-  def host: String
-
-  def path: String
-
-  def query: Query
-}
+sealed trait Url
 
 object Url {
 
@@ -43,26 +31,42 @@ object Url {
     // implement here all the required type classes
     // To understand the material it would be enough to implement Show
     // Read implementation is a task with asterisk
-    case class HttpUrl(username: String, password: String, host: String, path: String, query: Query) extends Url {
-      override def protocol: String = "http"
-    }
+    case class WithProtocolUrl(protocol: String, username: String, password: String, host: String, path: String, query: Query) extends Url
+
+    case class WithoutProtocolUrl(username: String, password: String, host: String, path: String, query: Query) extends Url
+
+    case class WithAuthUrl(protocol: String, username: String, password: String, host: String, path: String, query: Query) extends Url
+
+    case class WithoutAuthUrl(protocol: String, host: String, path: String, query: Query) extends Url
+
+    case class WithQueryUrl(protocol: String, username: String, password: String, host: String, path: String, query: Query) extends Url
+
+    case class WithoutQueryUrl(protocol: String, username: String, password: String, host: String, path: String) extends Url
 
     case class Query() {
-      var map:Map[String, String] = Map()
+      var map: Map[String, String] = Map()
 
       def add(key: String, value: String): Query = {
         map += (key -> value)
         this
       }
 
-      override def toString: String = map.map{case (k, v) => k + "=" + v}.mkString("?", "&", "")
+      override def toString: String = map.map { case (k, v) => k + "=" + v }.mkString("?", "&", "")
     }
 
-    implicit val urlCanShow: Show[Url] = url =>
-      s"${url.protocol}://${url.username}:${url.password}@${url.host}${url.path}${url.query}"
+    implicit val urlCanShow: Show[Url] = {
+      case WithProtocolUrl(protocol, username, password, host, path, query) => s"${protocol}://${username}:${password}@${host}${path}${query}"
+      case WithoutProtocolUrl(username, password, host, path, query) => s"${username}:${password}@${host}${path}${query}"
+      case WithAuthUrl(protocol, username, password, host, path, query) => s"${protocol}://${username}:${password}@${host}${path}${query}"
+      case WithoutAuthUrl(protocol, host, path, query) => s"${protocol}://${host}${path}${query}"
+      case WithQueryUrl(protocol, username, password, host, path, query) => s"${protocol}://${username}:${password}@${host}${path}${query}"
+      case WithoutQueryUrl(protocol, username, password, host, path) => s"${protocol}://${username}:${password}@${host}${path}"
+      case _ => "Unsupported type"
+    }
+
 
     implicit val urlCanRead: Read[Url] = {
-      case url => Right(HttpUrl("username", "pass", "host.org", "/path", Query()))
+      case url => Right(WithoutProtocolUrl("username", "pass", "host.org", "/path", Query()))
       case invalid => Left(s"""Unable to read a URL from "$invalid".""")
     }
   }
@@ -70,8 +74,10 @@ object Url {
 }
 
 object UrlApp extends App {
+
   import task4.urlPackage.Url.ops.urlCanShow
+
   val query = Query().add("a", "b").add("key", "val")
-  val http = HttpUrl("username", "pass", "host.org", "/path", query)
-  println(Show[Url].show(http))
+  val url = WithoutProtocolUrl("username", "pass", "host.org", "/path", query)
+  println(Show[Url].show(url))
 }
