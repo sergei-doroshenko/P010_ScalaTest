@@ -37,6 +37,9 @@ object Set {
       else set.apply(x)
   }
 
+  def insert2(day: Weekday.Value, set: Set): Set = union(singleton(day), set)
+  def insert3(day: Weekday.Value, set: Set): Set = someDay => (someDay == day) || set(someDay)
+
   /**
    * Full syntax.
    * @param day a Weekday
@@ -58,6 +61,8 @@ object Set {
       else set(x)
   }
 
+  def remove3(day: Weekday.Value, set: Set): Set = someDay => (someDay != day) && set(someDay)
+
   def contains(day: Weekday.Value, set: Set): Boolean = set match {
     case Set.empty => false
     case _ => set(day)
@@ -73,13 +78,21 @@ object Set {
     Weekday.values.filter(v => left(v) != right(v)).isEmpty
   }
 
+  def isEqual2(left: Set, right: Set): Boolean = !Weekday.values.exists(day => left(day) ^ right(day))
+  def isEqual3(left: Set, right: Set): Boolean = Weekday.values.forall(day => left(day) == right(day))
+
   def isSubsetOf(left: Set, right: Set): Boolean = {
     Weekday.values.filter(v => left(v)).subsetOf(Weekday.values.filter(x => right(x)))
   }
+
+  def isSubsetOf2(left: Set, right: Set): Boolean = !Weekday.values.exists(day => left(day) && !right(day))
+  def isSubsetOf3(left: Set, right: Set): Boolean = Weekday.values.forall(day => !left(day) || right(day))
 
   // In mathematics, two sets are said to be disjoint sets if they have no element in common.
   def isDisjointFrom(left: Set, right: Set): Boolean = {
     Weekday.values.filter(v => left(v) && right(v)).isEmpty
   }
 
+  def isDisjointFrom2(left: Set, right: Set): Boolean = isEmpty(intersection(left, right))
+  def isDisjointFrom3(left: Set, right: Set): Boolean = Weekday.values.forall(day => !(left(day) && right(day)))
 }
