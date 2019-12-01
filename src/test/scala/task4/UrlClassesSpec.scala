@@ -50,12 +50,12 @@ class UrlClassesSpec  extends WordSpec with Matchers with TableDrivenPropertyChe
           ("url", "expected"),
           (
             "http://user:pass@host.org/test?key=val&a=b",
-            WithProtocolUrl("http", "user", "pass", "host.org", "/test", Query())
+            WithProtocolUrl("http", "user", "pass", "host.org", "test", Query("key=val&a=b"))
           )
         )
 
-        forEvery(cases) { (number, expected) =>
-          Read[Url].read(number) should be (Right(expected))
+        forEvery(cases) { (url, expected) =>
+          Read[Url].read(url) should be (Right(expected))
         }
       }
       "be able to read invalid url" in {

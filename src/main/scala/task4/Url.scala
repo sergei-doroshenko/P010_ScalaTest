@@ -65,19 +65,24 @@ object Url {
     }
 
     implicit val urlCanRead: Read[Url] = url => {
-      val regex =
-        """
-          |(http)://
-          |(user)\:(pass)@
-          |(host\.org)
-          |(\/test)
-          |(\?[A-Za-z0-9=]*)
-          |""".r
+      val UrlPattern = """(?:(\w++)://)?(?:([-_A-Za-z0-9]++)(?::([-_A-Za-z0-9]++))?@)?(?:([-._A-Za-z0-9]++(?::[0-9]++)?)(?:/)?)(?:([-/._A-Za-z0-9]++)[?]?)?(?:([-=&.%_A-Za-z0-9]++))?""".r
       url match {
-        case regex(protocol, username, password, host, path, query) => Right(WithProtocolUrl(protocol, username, password, host, path, Query(query)))
+        case UrlPattern(protocol, username, password, host, path, query) =>
+          Right(WithProtocolUrl(protocol, username, password, host, path, Query(query)))
         case invalid => Left(s"""Unable to read a URL from "$invalid".""")
       }
+    }
 
+    def parse(url:String): Unit = {
+      val UrlPattern = """(?:(\w++)://)?(?:([-_A-Za-z0-9]++)(?::([-_A-Za-z0-9]++))?@)?(?:([-._A-Za-z0-9]++(?::[0-9]++)?)(?:/)?)(?:([-/._A-Za-z0-9]++)[?]?)?(?:([-=&.%_A-Za-z0-9]++))?""".r
+      url match {
+        case UrlPattern(protocol, null, null, host, path, null) => println(s"2$protocol-$host-$path")
+        case UrlPattern(protocol, null, null, host, path, query) => println(s"1$protocol-$host-$path-$query")
+        case UrlPattern(null, username, password, host, path, query) => println(s"3$username-$password-$host-$path-$query")
+        case UrlPattern(protocol, username, password, host, path, null) => println(s"4$protocol-$username-$password-$host-$path")
+        case UrlPattern(protocol, username, password, host, path, query) => println(s"5$protocol-$username-$password-$host-$path-$query")
+        case invalid => println(s"""Unable to read a URL from "$invalid".""")
+      }
     }
   }
 
@@ -91,8 +96,10 @@ object UrlApp extends App {
   val url = WithoutProtocolUrl("username", "pass", "host.org", "/path", query)
   println(Show[Url].show(url))
 
-  val pattern = "(?:https?://)?(?:www\\.)?(\\w*)?:(\\w*@)?([A-Za-z0-9._%+-]+)/?.*".r
-  for (patternMatch <- pattern.findAllMatchIn("username:pass@host.org/path?a=b&key=val"))
-    println(s"${patternMatch.group(0)}, ${patternMatch.group(1)}, ${patternMatch.group(2)}" +
-      s", ${patternMatch.group(3)}, ${patternMatch.group(4)}")
+  import task4.urlPackage.Url.ops.parse
+  parse("http://username:pass@host.org/path?a=b&key=val")
+  parse("username:pass@host.org/path?a=b&key=val")
+  parse("http://username:pass@host.org/path")
+  parse("http://host.org/path?a=b&key=val")
+  parse("http://host.org/path")
 }
