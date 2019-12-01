@@ -40,4 +40,36 @@ class UrlClassesSpec  extends WordSpec with Matchers with TableDrivenPropertyChe
       }
     }
   }
+
+  "Read" can {
+    import task4.urlPackage.Url.ops.urlCanRead
+
+    "read" should {
+      "be able to read valid url" in {
+        val cases = Table(
+          ("url", "expected"),
+          (
+            "http://user:pass@host.org/test?key=val&a=b",
+            WithProtocolUrl("http", "user", "pass", "host.org", "/test", Query())
+          )
+        )
+
+        forEvery(cases) { (number, expected) =>
+          Read[Url].read(number) should be (Right(expected))
+        }
+      }
+      "be able to read invalid url" in {
+        val cases = Table(
+          ("number"),
+          ("apple"),
+          ("+4+2"),
+          ("-4-2")
+        )
+
+        forEvery(cases) { url =>
+          Read[Url].read(url) should be(Left(s"""Unable to read a URL from "$url"."""))
+        }
+      }
+    }
+  }
 }
