@@ -43,7 +43,7 @@ object Url {
 
     case class WithoutQueryUrl(protocol: String, username: String, password: String, host: String, path: String) extends Url
 
-    case class Query(query: String = "") {
+    case class Query(query:String = "") {
       var map: Map[String, String] = Map()
 
       def add(key: String, value: String): Query = {
@@ -52,6 +52,16 @@ object Url {
       }
 
       override def toString: String = map.map { case (k, v) => k + "=" + v }.mkString("?", "&", "")
+    }
+
+    object Query {
+      def apply(query: String): Query = {
+        val result = new Query()
+        query.split("&").map(t => t.split("=")).foreach(arr => result.add(arr(0), arr(1)))
+        result
+      }
+
+      def apply(): Query = new Query
     }
 
     implicit val urlCanShow: Show[Url] = {
@@ -67,8 +77,10 @@ object Url {
     implicit val urlCanRead: Read[Url] = url => {
       val UrlPattern = """(?:(\w++)://)?(?:([-_A-Za-z0-9]++)(?::([-_A-Za-z0-9]++))?@)?(?:([-._A-Za-z0-9]++(?::[0-9]++)?)(?:/)?)(?:([-/._A-Za-z0-9]++)[?]?)?(?:([-=&.%_A-Za-z0-9]++))?""".r
       url match {
-        case UrlPattern(protocol, username, password, host, path, query) =>
-          Right(WithProtocolUrl(protocol, username, password, host, path, Query(query)))
+        case UrlPattern(protocol, null, null, host, path, query) => Right(WithoutAuthUrl(protocol, host, path, Query(query)))
+        case UrlPattern(null, username, password, host, path, query) => Right(WithoutProtocolUrl(username, password, host, path, Query(query)))
+        case UrlPattern(protocol, username, password, host, path, null) => Right(WithoutQueryUrl(protocol, username, password, host, path))
+        case UrlPattern(protocol, username, password, host, path, query) => Right(WithProtocolUrl(protocol, username, password, host, path, Query(query)))
         case invalid => Left(s"""Unable to read a URL from "$invalid".""")
       }
     }
@@ -102,4 +114,6 @@ object UrlApp extends App {
   parse("http://username:pass@host.org/path")
   parse("http://host.org/path?a=b&key=val")
   parse("http://host.org/path")
+
+  println(Query("key=val&a=b"))
 }

@@ -4,7 +4,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import scalaBasic.urlPackage.{Read, Show}
 import task4.urlPackage.Url
-import task4.urlPackage.Url.ops.{Query, WithAuthUrl, WithProtocolUrl, WithoutAuthUrl, WithoutProtocolUrl}
+import task4.urlPackage.Url.ops.{Query, WithAuthUrl, WithProtocolUrl, WithoutAuthUrl, WithoutProtocolUrl, WithoutQueryUrl}
 
 class UrlClassesSpec  extends WordSpec with Matchers with TableDrivenPropertyChecks {
 
@@ -50,20 +50,31 @@ class UrlClassesSpec  extends WordSpec with Matchers with TableDrivenPropertyChe
           ("url", "expected"),
           (
             "http://user:pass@host.org/test?key=val&a=b",
-            WithProtocolUrl("http", "user", "pass", "host.org", "test", Query("key=val&a=b"))
-          )
+            WithProtocolUrl("http", "user", "pass", "host.org", "test", Query().add("key", "val").add("a", "b"))
+          ),
+          (
+            "http://host.org/test?key=val&a=b",
+            WithoutAuthUrl("http", "host.org", "test", Query().add("key", "val").add("a", "b"))
+          ),
+          (
+            "user:pass@host.org/test?key=val&a=b",
+            WithoutProtocolUrl("user", "pass", "host.org", "test", Query().add("key", "val").add("a", "b"))
+          ),
+          (
+            "http://user:pass@host.org/test",
+            WithoutQueryUrl("http", "user", "pass", "host.org", "test")
+          ),
         )
 
         forEvery(cases) { (url, expected) =>
           Read[Url].read(url) should be (Right(expected))
         }
       }
+
       "be able to read invalid url" in {
         val cases = Table(
-          ("number"),
-          ("apple"),
-          ("+4+2"),
-          ("-4-2")
+          ("host.org"),
+          ("user:pass")
         )
 
         forEvery(cases) { url =>
