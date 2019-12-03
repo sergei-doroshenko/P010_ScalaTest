@@ -21,18 +21,18 @@ class UrlClassesSpec  extends WordSpec with Matchers with TableDrivenPropertyChe
             Url(Some("http"), Some(LoginAndPassword("user", "pass")), "host.org", Path("test"), Some(query)),
             "http://user:pass@host.org/test?key=val&a=b"
           ),
-          /*(
-            Url(Option.empty, Some(LoginAndPassword("user", "pass")), "host.org", Path("/test"), Some(query)),
+          (
+            Url(Option.empty, Some(LoginAndPassword("user", "pass")), "host.org", Path("test"), Some(query)),
             "user:pass@host.org/test?key=val&a=b"
-          ),*/
-         /* (
-            Url(Some("http"), Some(LoginAndPassword("user", "pass")), "host.org", Path("/test"), Some(query)),
+          ),
+          (
+            Url(Some("http"), Some(LoginAndPassword("user", "pass")), "host.org", Path("test"), Some(query)),
             "http://user:pass@host.org/test?key=val&a=b"
-          ),*/
-          /*(
-            Url(Some("http"), Option.empty, "host.org", Path("/test"), Some(query)),
+          ),
+          (
+            Url(Some("http"), Option.empty, "host.org", Path("test"), Some(query)),
             "http://host.org/test?key=val&a=b"
-          ),*/
+          ),
         )
 
         forEvery(cases) { (url, expected) =>
@@ -54,18 +54,18 @@ class UrlClassesSpec  extends WordSpec with Matchers with TableDrivenPropertyChe
             "http://user:pass@host.org/test?key=val&a=b",
             Url(Some("http"), Some(LoginAndPassword("user", "pass")), "host.org", Path("test"), Some(query)),
           ),
-          /*(
+          (
             "http://host.org/test?key=val&a=b",
-            Url(Some("http"), Option.empty, "host.org", Path("/test"), Some(query)),
+            Url(Some("http"), Option.empty, "host.org", Path("test"), Some(query)),
           ),
           (
             "user:pass@host.org/test?key=val&a=b",
-            Url(Option.empty, Some(LoginAndPassword("user", "pass")), "host.org", Path("/test"), Some(query)),
+            Url(Option.empty, Some(LoginAndPassword("user", "pass")), "host.org", Path("test"), Some(query)),
           ),
           (
             "http://user:pass@host.org/test",
-            Url(Some("http"), Some(LoginAndPassword("user", "pass")), "host.org", Path("/test"), Option.empty),
-          ),*/
+            Url(Some("http"), Some(LoginAndPassword("user", "pass")), "host.org", Path("test"), Option.empty),
+          ),
         )
 
         forEvery(cases) { (url, expected) =>

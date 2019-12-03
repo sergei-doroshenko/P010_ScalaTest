@@ -69,6 +69,7 @@ object Url {
     implicit val urlCanShow: Show[Url] = {
       case Url(Some(protocol), Some(LoginAndPassword(username, password)), host, path, Some(query)) => s"${protocol}://${username}:${password}@${host}${path}${query}"
       case Url(Some(protocol), Some(LoginOnly(username)), host, path, Some(query)) => s"${protocol}://${username}@${host}${path}${query}"
+      case Url(Some(protocol), None, host, path, Some(query)) => s"${protocol}://${host}${path}${query}"
       case Url(None, Some(LoginAndPassword(username, password)), host, path, Some(query)) => s"${username}:${password}@${host}${path}${query}"
       case Url(None, None, host, path, Some(query)) => s"${host}${path}${query}"
       case _ => "Unsupported type"
