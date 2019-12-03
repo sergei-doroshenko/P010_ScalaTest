@@ -1,7 +1,7 @@
 package task4.urlPackage
 
 import scalaBasic.urlPackage.{Read, Show}
-import task4.urlPackage.Url.ops.{Query, WithoutProtocolUrl}
+import task4.urlPackage.Credentials.{LoginAndPassword, LoginOnly}
 
 /*
  * Task is to get practice in ADT and type classes.
@@ -21,66 +21,66 @@ import task4.urlPackage.Url.ops.{Query, WithoutProtocolUrl}
 
 
 // Make Url type more strict, rewrite it as Algebraic Data Type
-//case class Url(protocol: String, username: String, password: String, host: String, path: String, query: String)
-sealed trait Url
+case class Url(   protocol   : Option[String]
+                , credentials: Option[Credentials]
+                , host       : String
+                , path       : Path
+                , query      : Option[Query]
+              )
+
+sealed trait Credentials
+
+object Credentials {
+  case class LoginOnly(username: String) extends Credentials
+  case class LoginAndPassword(username: String, password: String) extends Credentials
+}
+
+case class Path(segments: Seq[String]) {
+  override def toString: String = segments.mkString("/", "/", "")
+}
+object Path {
+//  def apply(segments: Seq[String]): Path = Path(segments)
+  def apply(path: String): Path = Path(path.split("/"))
+}
+
+case class Query(parameters: Map[String, String] = Map.empty) {
+  override def toString: String = parameters.map { case (k, v) => k + "=" + v }.mkString("?", "&", "")
+}
+
+object Query {
+//  def apply(parameters: Map[String, String] = Map.empty): Query = new Query(parameters)
+  def apply(query: String): Query = {
+    val parameters = query.split("&").map(t => t.split("=")).map(p => (p(0), p(1))).toMap
+    Query(parameters)
+  }
+}
 
 object Url {
+  /*def apply(protocol: String, credentials: Credentials, host: String, path: Path, query: Query): Url = Url(Some(protocol), Some(credentials), host, path, Some(query))
+  def apply(credentials: Credentials, host: String, path: Path, query: Query): Url = Url(Option.empty, Some(credentials), host, path, Some(query))
+  def apply(host: String, path: Path, query: Query): Url = Url(Option.empty, Option.empty, host, path, Some(query))*/
 
   object ops {
 
     // implement here all the required type classes
     // To understand the material it would be enough to implement Show
     // Read implementation is a task with asterisk
-    case class WithProtocolUrl(protocol: String, username: String, password: String, host: String, path: String, query: Query) extends Url
-
-    case class WithoutProtocolUrl(username: String, password: String, host: String, path: String, query: Query) extends Url
-
-    case class WithAuthUrl(protocol: String, username: String, password: String, host: String, path: String, query: Query) extends Url
-
-    case class WithoutAuthUrl(protocol: String, host: String, path: String, query: Query) extends Url
-
-    case class WithQueryUrl(protocol: String, username: String, password: String, host: String, path: String, query: Query) extends Url
-
-    case class WithoutQueryUrl(protocol: String, username: String, password: String, host: String, path: String) extends Url
-
-    case class Query(query:String = "") {
-      var map: Map[String, String] = Map()
-
-      def add(key: String, value: String): Query = {
-        map += (key -> value)
-        this
-      }
-
-      override def toString: String = map.map { case (k, v) => k + "=" + v }.mkString("?", "&", "")
-    }
-
-    object Query {
-      def apply(query: String): Query = {
-        val result = new Query()
-        query.split("&").map(t => t.split("=")).foreach(arr => result.add(arr(0), arr(1)))
-        result
-      }
-
-      def apply(): Query = new Query
-    }
 
     implicit val urlCanShow: Show[Url] = {
-      case WithProtocolUrl(protocol, username, password, host, path, query) => s"${protocol}://${username}:${password}@${host}${path}${query}"
-      case WithoutProtocolUrl(username, password, host, path, query) => s"${username}:${password}@${host}${path}${query}"
-      case WithAuthUrl(protocol, username, password, host, path, query) => s"${protocol}://${username}:${password}@${host}${path}${query}"
-      case WithoutAuthUrl(protocol, host, path, query) => s"${protocol}://${host}${path}${query}"
-      case WithQueryUrl(protocol, username, password, host, path, query) => s"${protocol}://${username}:${password}@${host}${path}${query}"
-      case WithoutQueryUrl(protocol, username, password, host, path) => s"${protocol}://${username}:${password}@${host}${path}"
+      case Url(Some(protocol), Some(LoginAndPassword(username, password)), host, path, Some(query)) => s"${protocol}://${username}:${password}@${host}${path}${query}"
+      case Url(Some(protocol), Some(LoginOnly(username)), host, path, Some(query)) => s"${protocol}://${username}@${host}${path}${query}"
+      case Url(None, Some(LoginAndPassword(username, password)), host, path, Some(query)) => s"${username}:${password}@${host}${path}${query}"
+      case Url(None, None, host, path, Some(query)) => s"${host}${path}${query}"
       case _ => "Unsupported type"
     }
 
     implicit val urlCanRead: Read[Url] = url => {
       val UrlPattern = """(?:(\w++)://)?(?:([-_A-Za-z0-9]++)(?::([-_A-Za-z0-9]++))?@)?(?:([-._A-Za-z0-9]++(?::[0-9]++)?)(?:/)?)(?:([-/._A-Za-z0-9]++)[?]?)?(?:([-=&.%_A-Za-z0-9]++))?""".r
       url match {
-        case UrlPattern(protocol, null, null, host, path, query) => Right(WithoutAuthUrl(protocol, host, path, Query(query)))
-        case UrlPattern(null, username, password, host, path, query) => Right(WithoutProtocolUrl(username, password, host, path, Query(query)))
-        case UrlPattern(protocol, username, password, host, path, null) => Right(WithoutQueryUrl(protocol, username, password, host, path))
-        case UrlPattern(protocol, username, password, host, path, query) => Right(WithProtocolUrl(protocol, username, password, host, path, Query(query)))
+        case UrlPattern(protocol, null, null, host, path, query) => Right(Url(Some(protocol), Option.empty, host, Path(path), Some(Query(query))))
+        case UrlPattern(null, username, password, host, path, query) => Right(Url(Option.empty, Some(LoginAndPassword(username, password)), host, Path(path), Some(Query(query))))
+        case UrlPattern(protocol, username, password, host, path, null) => Right(Url(Some(protocol), Some(LoginAndPassword(username, password)), host, Path(path), Option.empty))
+        case UrlPattern(protocol, username, password, host, path, query) => Right(Url(Some(protocol), Some(LoginAndPassword(username, password)), host, Path(path), Some(Query(query))))
         case invalid => Left(s"""Unable to read a URL from "$invalid".""")
       }
     }
@@ -101,11 +101,11 @@ object Url {
 }
 
 object UrlApp extends App {
-
+  println("Start...")
   import task4.urlPackage.Url.ops.urlCanShow
 
-  val query = Query().add("a", "b").add("key", "val")
-  val url = WithoutProtocolUrl("username", "pass", "host.org", "/path", query)
+  val query = Query(Map("a" -> "b", "key" -> "val"))
+  val url = Url(Some("http"), Some(LoginAndPassword("username", "pass")), "host.org", Path("path"), Some(query))
   println(Show[Url].show(url))
 
   import task4.urlPackage.Url.ops.parse
@@ -115,5 +115,5 @@ object UrlApp extends App {
   parse("http://host.org/path?a=b&key=val")
   parse("http://host.org/path")
 
-  println(Query("key=val&a=b"))
+//  println(Query("key=val&a=b"))
 }
