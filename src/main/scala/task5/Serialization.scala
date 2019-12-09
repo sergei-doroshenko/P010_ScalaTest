@@ -1,16 +1,16 @@
 package task5
 
+import task5.SerializationApp.p
+
 // Implement a simple library for Json serialization using Type Classes pattern.
 // We want be able to serialize any arbitrary object into a json
 // string by providing a conversion to Json AST (abstract syntax tree).
-
 class Serialization {
 
 }
 
-
 trait Serializable[T] {
-  def serialize[T](obj: T): JsField
+  def serialize(obj: T): JsField
 }
 
 object Serializable {
@@ -18,10 +18,6 @@ object Serializable {
 
   object ops {
     def serialize[T: Serializable](value: T): JsField = Serializable[T].serialize(value)
-
-    implicit class SerializableOps[T: Serializable](value: T) {
-      def serialize: JsField = Serializable[T].serialize(value)
-    }
 
     implicit val intCanSerialize: Serializable[Int] = (obj: Int) => JsNumber(obj)
 
@@ -34,9 +30,15 @@ object Serializable {
 }
 
 trait JsField
-case class JsObject(fields: (String, JsField)*) extends JsField
-case class JsNumber(value: Int) extends JsField
-case class JsString(value: String) extends JsField
+case class JsObject(fields: (String, JsField)*) extends JsField {
+  override def toString: String = fields.map(field => s""""${field._1}":${field._2}""").mkString("{", ",", "}")
+}
+case class JsNumber(value: Int) extends JsField {
+  override def toString: String = value.toString
+}
+case class JsString(value: String) extends JsField {
+  override def toString: String = "\"" + value + "\"";
+}
 
 // For example:
 //

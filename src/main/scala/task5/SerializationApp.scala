@@ -4,9 +4,11 @@ case class Person(name: String, age: Int)
 
 object SerializationApp extends App {
    import Serializable.ops.intCanSerialize
-   Serializable.ops.serialize(300)
+   val json = Serializable.ops.serialize(300)
+   println(json)
 
    import Serializable.ops.personCanSerialize
    val p = Person("personName", 30)
-   Serializable.ops.serialize(p) // {"name": "personName", "age": 30}
+   val personJson = Serializable.ops.serialize(p)
+   println(personJson) // {"name": "personName", "age": 30}
 }
