@@ -26,7 +26,6 @@ object Serializable {
       "age" -> JsNumber(p.age)
     )
   }
-
 }
 
 trait JsField
