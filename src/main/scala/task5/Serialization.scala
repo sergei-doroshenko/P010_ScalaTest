@@ -56,9 +56,8 @@ case class JsString(value: String) extends JsType {
   override def toString: String = "\"" + value + "\""
 }
 
-case class JsArray[T](value: Seq[T])(implicit val ser: Serializable[T]) extends JsType {
-//  override def toString: String = value.map(v => if (v.isInstanceOf[String]) s""""$v"""" else v).mkString("[", ",", "]")
-  override def toString: String = value.map(v => ser.serialize(v)).mkString("[", ",", "]")
+case class JsArray[T](value: Seq[T])(implicit val serializer: Serializable[T]) extends JsType {
+  override def toString: String = value.map(v => serializer.serialize(v)).mkString("[", ",", "]")
 }
 
 // For example:
