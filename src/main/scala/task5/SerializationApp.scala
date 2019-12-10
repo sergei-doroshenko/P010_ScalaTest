@@ -1,5 +1,7 @@
 package task5
 
+import task5.serializationPackage.{Serializable}
+
 case class Person(name: String, age: Int, aliases: Seq[String] = List.empty)
 
 object SerializationApp extends App {
