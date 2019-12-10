@@ -1,7 +1,5 @@
 package task5
 
-import task5.SerializationApp.p
-
 // Implement a simple library for Json serialization using Type Classes pattern.
 // We want be able to serialize any arbitrary object into a json
 // string by providing a conversion to Json AST (abstract syntax tree).
@@ -10,33 +8,57 @@ class Serialization {
 }
 
 trait Serializable[T] {
-  def serialize(obj: T): JsField
+  def serialize(obj: T): JsType
 }
 
 object Serializable {
   def apply[T](implicit evidence: Serializable[T]): Serializable[T] = evidence
 
   object ops {
-    def serialize[T: Serializable](value: T): JsField = Serializable[T].serialize(value)
+    def serialize[T: Serializable](value: T): JsType = Serializable[T].serialize(value)
 
+    implicit val boolCanSerialize: Serializable[Boolean] = (obj: Boolean) => JsBool(obj)
     implicit val intCanSerialize: Serializable[Int] = (obj: Int) => JsNumber(obj)
+    implicit val strCanSerialize: Serializable[String] = (obj: String) => JsString(obj)
 
     implicit val personCanSerialize: Serializable[Person] = (p: Person) => JsObject(
       "name" -> JsString(p.name),
-      "age" -> JsNumber(p.age)
+      "age" -> JsNumber(p.age),
+      "aliases" -> JsArray(p.aliases)
     )
+
+    implicit def intSeqCanSerialize: Serializable[Seq[Int]] = (s: Seq[Int]) => JsArray(s)
+    implicit def strSeqCanSerialize: Serializable[Seq[String]] = (s: Seq[String]) => JsArray(s)
+
+    implicit def boolListCanSerialize: Serializable[List[Boolean]] = (s: Seq[Boolean]) => JsArray(s)
+    implicit def personListCanSerialize: Serializable[List[Person]] = (s: List[Person]) => JsArray(s)
+
+    implicit def intArrayCanSerialize: Serializable[Array[Int]] = (s: Array[Int]) => JsArray(s)
   }
+
 }
 
-trait JsField
-case class JsObject(fields: (String, JsField)*) extends JsField {
+trait JsType
+
+case class JsObject(fields: (String, JsType)*) extends JsType {
   override def toString: String = fields.map(field => s""""${field._1}":${field._2}""").mkString("{", ",", "}")
 }
-case class JsNumber(value: Int) extends JsField {
+
+case class JsBool(value: Boolean) extends JsType {
   override def toString: String = value.toString
 }
-case class JsString(value: String) extends JsField {
-  override def toString: String = "\"" + value + "\"";
+
+case class JsNumber(value: Int) extends JsType {
+  override def toString: String = value.toString
+}
+
+case class JsString(value: String) extends JsType {
+  override def toString: String = "\"" + value + "\""
+}
+
+case class JsArray[T](value: Seq[T])(implicit val ser: Serializable[T]) extends JsType {
+//  override def toString: String = value.map(v => if (v.isInstanceOf[String]) s""""$v"""" else v).mkString("[", ",", "]")
+  override def toString: String = value.map(v => ser.serialize(v)).mkString("[", ",", "]")
 }
 
 // For example:
