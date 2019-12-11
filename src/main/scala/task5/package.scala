@@ -29,6 +29,8 @@ package object serializationPackage {
 
       implicit def strSeqCanSerialize: Serializable[Seq[String]] = (s: Seq[String]) => JsArray(s)
 
+      implicit def nullListCanSerialize: Serializable[Null] = (_) => JsNull()
+
       implicit def boolListCanSerialize: Serializable[List[Boolean]] = (s: Seq[Boolean]) => JsArray(s)
 
       implicit def personListCanSerialize: Serializable[List[Person]] = (s: List[Person]) => JsArray(s)
@@ -42,6 +44,10 @@ package object serializationPackage {
 
   case class JsObject(fields: (String, JsType)*) extends JsType {
     override def toString: String = fields.map(field => s""""${field._1}":${field._2}""").mkString("{", ",", "}")
+  }
+
+  case class JsNull() extends JsType {
+    override def toString: String = null
   }
 
   case class JsBool(value: Boolean) extends JsType {
