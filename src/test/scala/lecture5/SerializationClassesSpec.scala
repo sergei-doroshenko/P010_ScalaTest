@@ -67,12 +67,12 @@ class SerializationClassesSpec extends WordSpec with Matchers with TableDrivenPr
 
     "serialize" should {
       "be able to serialize lists" in {
-        val p = Person("personName", 30)
+        val p1 = Person("personName", 30)
         val p2 = Person("Alan", 40, List("man", "himan"))
         val cases = Table(
           ("list", "expected"),
           (
-            p :: p2 :: Nil,
+            p1 :: p2 :: Nil,
             JsArray(List(
               JsObject(Map("name" -> JsString("personName"), "age" -> JsNumber(30), "aliases" -> JsArray(List()))),
               JsObject(Map("name" -> JsString("Alan"), "age" -> JsNumber(40), "aliases" -> JsArray(List(JsString("man"), JsString("himan")))))
@@ -80,11 +80,31 @@ class SerializationClassesSpec extends WordSpec with Matchers with TableDrivenPr
           )
         )
 
-        forEvery(cases) { (person, expected) =>
-          Serializable.ops.serialize(person) should be(expected)
+        forEvery(cases) { (list, expected) =>
+          Serializable.ops.serialize(list) should be(expected)
         }
       }
     }
 
+    "serialize" should {
+      "be able to serialize maps" in {
+        val p1 = Person("personName", 30)
+        val p2 = Person("Alan", 40, List("man", "himan"))
+        val cases = Table(
+          ("map", "expected"),
+          (
+            Map("personA" -> p1, "personB" -> p2),
+            JsObject(
+              "personA" -> JsObject(Map("name" -> JsString("personName"), "age" -> JsNumber(30), "aliases" -> JsArray(List()))),
+              "personB" -> JsObject(Map("name" -> JsString("Alan"), "age" -> JsNumber(40), "aliases" -> JsArray(List(JsString("man"), JsString("himan")))))
+            )
+          )
+        )
+
+        forEvery(cases) { (map, expected) =>
+          Serializable.ops.serialize(map) should be(expected)
+        }
+      }
+    }
   }
 }

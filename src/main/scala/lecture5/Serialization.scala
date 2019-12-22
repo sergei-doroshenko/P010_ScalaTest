@@ -33,8 +33,16 @@ object Serializable {
     implicit def intArrayCanSerialize: Serializable[Array[Int]] = (s: Array[Int]) => JsArray(s)
 
     implicit def strSeqCanSerialize: Serializable[Seq[String]] = (s: Seq[String]) => JsArray(s)
+    // Serializable[Seq[T]] for any sequence where T also have Serializable[T] declared
+    implicit def serializableSeq[T](implicit serializable: Serializable[T]): Serializable[Seq[T]] =
+      value => JsArray(value.map(serializable.serialize))
 
-//    implicit def boolListCanSerialize: Serializable[List[Boolean]] = (s: Seq[Boolean]) => JsArray(s)
+    // Serializable[Map[String, T]] for any Map where T also have Serializable[T] declared:
+    implicit def serializableMap[T](implicit serializable: Serializable[T]): Serializable[Map[String, T]] =
+      properties => JsObject(properties.view.mapValues(serializable.serialize).toMap)
+
+
+    //    implicit def boolListCanSerialize: Serializable[List[Boolean]] = (s: Seq[Boolean]) => JsArray(s)
 
 //    implicit def intArrayCanSerialize: Serializable[Array[Int]] = (s: Array[Int]) => JsArray(s)
   }
