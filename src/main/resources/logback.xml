@@ -7,6 +7,8 @@
 
 <!--    <logger name="slick.jdbc.JdbcBackend.statement"  level="DEBUG" />-->
     <logger name="slick" level="DEBUG" />
+    <logger name="akka.actor.CoordinatedShutdown" level="INFO" />
+    <logger name="akka.actor" level="DEBUG" />
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />

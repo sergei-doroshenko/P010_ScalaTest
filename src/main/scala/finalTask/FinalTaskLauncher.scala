@@ -6,7 +6,7 @@ import finalTask.service.SomeService
 
 import scala.concurrent.duration.Duration
 
-object Launcher extends App {
+object FinalTaskLauncher extends App {
   val studentsDbio = StudentsDbio()
   val someService = SomeService(studentsDbio)
 
@@ -15,7 +15,7 @@ object Launcher extends App {
     println(s0)
     val s1 = Await.result(someService.saveStudent(Student(Option.empty, "Eva")), Duration.Inf)
     println(s1)
-    val s2 = Await.result(someService.findStudentById(1), Duration.Inf)
+    val s2 = someService.findStudentById(1).get
     println(s2)
   } finally someService.shutDown
 

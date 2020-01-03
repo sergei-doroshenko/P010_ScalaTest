@@ -14,8 +14,8 @@ sealed trait Monad[F[_]] extends Applicative[F] {
   def bind[A, B]: (A => F[B]) => F[A] => F[B]
 }
 
-case class Pet(name: String, birthday: Option[Instant])
-case class User(id: String)
+case class Pet1(name: String, birthday: Option[Instant])
+case class User1(id: String)
 
 case class Building(number: Int)
 case class Street(name: String, buildings: Seq[Building])
