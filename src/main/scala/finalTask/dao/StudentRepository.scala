@@ -5,7 +5,7 @@ import slick.jdbc.H2Profile.api._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-class StudentsDbio {
+class StudentRepository {
 
   val db = Database.forConfig("h2mem1")
 
@@ -32,10 +32,10 @@ class StudentsDbio {
   }
 }
 
-object StudentsDbio {
-  def apply(): StudentsDbio = {
-    val dbio = new StudentsDbio()
-    Await.result(dbio.init(), Duration.Inf)
-    dbio
+object StudentRepository {
+  def apply(): StudentRepository = {
+    val repository = new StudentRepository()
+    Await.result(repository.init(), Duration.Inf)
+    repository
   }
 }

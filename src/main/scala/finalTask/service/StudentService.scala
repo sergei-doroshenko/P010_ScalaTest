@@ -4,20 +4,20 @@ import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.util.Timeout
-import finalTask.dao.{Student, StudentsDbio}
+import finalTask.dao.{Student, StudentRepository}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success}
 
-class SomeService(studentsDbio: StudentsDbio) {
+class StudentService(studentRepository: StudentRepository) {
 
-  implicit val system: ActorSystem[Root.SystemMessage] = ActorSystem(Root(), "root")
+  implicit val system: ActorSystem[ServiceRoot.SystemMessage] = ActorSystem(ServiceRoot(), "StudentService")
   implicit val timeout: Timeout = 3.seconds
 
   def findStudentById(id: Int): Option[Student] = {
     import ServiceQuery._
-    val studentQueryFuture: Future[ActorRef[Query]] = system ? Root.FindStudent // ask
+    val studentQueryFuture: Future[ActorRef[Query]] = system ? ServiceRoot.FindStudent // ask
     val serviceQueryActor = Await.result(studentQueryFuture, 1.second)
 
     val eventualStudent: Future[Student] = serviceQueryActor ? (FindById("", id, _)) // ask
@@ -28,14 +28,14 @@ class SomeService(studentsDbio: StudentsDbio) {
   }
 
   def saveStudent(student: Student): Future[Student] =
-    studentsDbio.insertStudent(student)
+    studentRepository.insertStudent(student)
 
   def shutDown: Unit = {
-    studentsDbio.shutDown
+    studentRepository.shutDown
     system.terminate()
   }
 
-  object Root {
+  object ServiceRoot {
     sealed trait SystemMessage
     case class Stop(reason: String) extends SystemMessage
     case class FindStudent(replyTo: ActorRef[ActorRef[ServiceQuery.Query]]) extends SystemMessage
@@ -61,7 +61,7 @@ class SomeService(studentsDbio: StudentsDbio) {
     import scala.concurrent.ExecutionContext.Implicits.global
     def apply(): Behavior[Query] = Behaviors.setup( ctx => Behaviors.receiveMessage {
       case FindById(_, id, replyTo) =>
-        val future = studentsDbio.findStudentById(id)
+        val future = studentRepository.findStudentById(id)
         future.onComplete{
           case Success(x) => x.map(st => replyTo ! st)
           case Failure(e) => e.printStackTrace
@@ -73,9 +73,9 @@ class SomeService(studentsDbio: StudentsDbio) {
 
 }
 
-object SomeService {
-  def apply(studentsDbio: StudentsDbio): SomeService = {
-    new SomeService(studentsDbio)
+object StudentService {
+  def apply(studentRepository: StudentRepository): StudentService = {
+    new StudentService(studentRepository)
   }
 }
 
