@@ -17,6 +17,9 @@ class StudentRepository {
   def insertStudent(student: Student): Future[Student] =
     db.run(Query.writeStudents += student)
 
+  def deleteStudentById(id: Int): Future[Int] =
+    db.run(Query.deleteStudentById(id))
+
   def shutDown: Unit = db.close()
 
   object Query {
@@ -29,6 +32,8 @@ class StudentRepository {
     // Return the student with it's auto incremented id instead of an insert count
     val writeStudents = students returning students
       .map(_.id) into((student, id) => student.copy(Option.apply(id)))
+
+    def deleteStudentById(id: Int) = students.filter(_.id === id).delete
   }
 }
 

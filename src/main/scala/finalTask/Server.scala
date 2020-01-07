@@ -1,4 +1,4 @@
-package samples.httptypedactors
+package finalTask
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter._
@@ -6,22 +6,24 @@ import akka.actor.typed.{ActorSystem, Behavior, PostStop}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
+import finalTask.dao.StudentRepository
+import finalTask.rest.StudentRoutes
+import finalTask.service.StudentService
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
 
 /**
- * $ curl -d '{"id": 100, "projectName":"Test0", "status":"Successful", "duration":2023}' -H "Content-Type: application/json" -X POST localhost:8080/jobs
- * $ curl -d {\"id\":100,\"projectName\":\"Test0\",\"status\":\"Successful\",\"duration\":2023} -H "Content-Type: application/json" -X POST localhost:8080/jobs
- * Job added
+ * $ curl -d {\"name\":\"Adam\"} -H "Content-Type: application/json" -X POST localhost:8080/students
+ * Student added
  *
- * $ curl localhost:8080/jobs/100
- * {"duration":2023,"id":100,"projectName":"Test0","status":"Successful"}
+ * $ curl localhost:8080/students/1
+ * {"id":1,"name":"Adam"}
  *
- * $ curl -X DELETE localhost:8080/jobs
- * Jobs cleared
+ * $ curl -X DELETE localhost:8080/students/1
+ * Student deleted
  *
- * $ curl localhost:8080/jobs/100
+ * $ curl localhost:8080/students/1
  * The requested resource could not be found.
  */
 object Server {
@@ -44,8 +46,9 @@ object Server {
     implicit val materializer: ActorMaterializer = ActorMaterializer()(ctx.system.toClassic)
     implicit val ec: ExecutionContextExecutor = ctx.system.executionContext
 
-    val buildJobRepository = ctx.spawn(JobRepository(), "JobRepository")
-    val routes = new JobRoutes(buildJobRepository)
+    val studentRepository = StudentRepository()
+    val buildStudentService = ctx.spawn(StudentService(studentRepository), "StudentService")
+    val routes = new StudentRoutes(buildStudentService)
 
     val serverBinding: Future[Http.ServerBinding] =
       Http.apply().bindAndHandle(routes.theJobRoutes, host, port)
