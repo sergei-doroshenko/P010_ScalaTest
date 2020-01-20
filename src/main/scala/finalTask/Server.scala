@@ -6,7 +6,7 @@ import akka.actor.typed.{ActorSystem, Behavior, PostStop}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
-import finalTask.dao.StudentRepository
+import finalTask.dao.{H2DBComponent, StudentRepository}
 import finalTask.rest.StudentRoutes
 import finalTask.service.StudentService
 
@@ -39,14 +39,12 @@ object Server {
   def apply(host: String, port: Int): Behavior[Message] = Behaviors.setup { ctx =>
 
     implicit val system = ctx.system
-    // http doesn't know about akka typed so provide untyped system
     implicit val untypedSystem: akka.actor.ActorSystem = ctx.system.toClassic
-    // implicit materializer only required in Akka 2.5
-    // in 2.6 having an implicit classic or typed ActorSystem in scope is enough
     implicit val materializer: ActorMaterializer = ActorMaterializer()(ctx.system.toClassic)
     implicit val ec: ExecutionContextExecutor = ctx.system.executionContext
 
-    val studentRepository = StudentRepository()
+    val dbComponent = H2DBComponent()
+    val studentRepository = StudentRepository(dbComponent)
     val buildStudentService = ctx.spawn(StudentService(studentRepository), "StudentService")
     val routes = new StudentRoutes(buildStudentService)
 

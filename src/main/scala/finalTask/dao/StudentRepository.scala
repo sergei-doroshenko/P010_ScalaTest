@@ -1,18 +1,21 @@
 package finalTask.dao
 
-import slick.jdbc.H2Profile.api._
-
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-class StudentRepository {
+class StudentRepository(dbComponent: DBComponent) {
 
-  val db = Database.forConfig("h2mem1")
+  import dbComponent.driver.api._
+
+  private val db = dbComponent.db
 
   def init(): Future[Unit] = db.run(Query.createSchema)
 
   def findStudentById(id: Int): Future[Option[Student]] =
     db.run(Query.studentById(id).result.headOption)
+
+  def findStudentByName(name: String): Future[Option[Student]] =
+    db.run(Query.studentByName(name).result.headOption)
 
   def insertStudent(student: Student): Future[Student] =
     db.run(Query.writeStudents += student)
@@ -22,24 +25,28 @@ class StudentRepository {
 
   def shutDown: Unit = db.close()
 
-  object Query {
+  private object Query {
+
     val students = TableQuery[Students]
 
     val createSchema = students.schema.create
 
     val studentById = students.findBy(_.id)
 
+    def studentByName(name: String) = students.filter(_.name === name)
+
     // Return the student with it's auto incremented id instead of an insert count
     val writeStudents = students returning students
-      .map(_.id) into((student, id) => student.copy(Option.apply(id)))
+      .map(_.id) into ((student, id) => student.copy(Option.apply(id)))
 
     def deleteStudentById(id: Int) = students.filter(_.id === id).delete
   }
+
 }
 
 object StudentRepository {
-  def apply(): StudentRepository = {
-    val repository = new StudentRepository()
+  def apply(dbComponent: DBComponent): StudentRepository = {
+    val repository = new StudentRepository(dbComponent)
     Await.result(repository.init(), Duration.Inf)
     repository
   }

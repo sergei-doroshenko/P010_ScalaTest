@@ -14,14 +14,7 @@ import scala.concurrent.duration._
 class StudentRoutes(buildJobRepository: ActorRef[StudentService.Command])(implicit system: ActorSystem[_]) extends JsonSupport {
 
   import akka.actor.typed.scaladsl.AskPattern._
-  import finalTask.rest.JsonSupport
-
-  // asking someone requires a timeout and a scheduler, if the timeout hits without response
-  // the ask is failed with a TimeoutException
   implicit val timeout: Timeout = 3.seconds
-  // implicit scheduler only needed in 2.5
-  // in 2.6 having an implicit typed ActorSystem in scope is enough
-  //  implicit val scheduler = system.scheduler
 
   lazy val theJobRoutes: Route =
     pathPrefix("students") {
@@ -34,7 +27,7 @@ class StudentRoutes(buildJobRepository: ActorRef[StudentService.Command])(implic
                   buildJobRepository.ask(StudentService.AddStudent(student, _))
                 onSuccess(operationPerformed) {
                   case StudentService.OK => complete("Student added")
-                  case StudentService.KO(reason) => complete(StatusCodes.InternalServerError -> reason)
+                  case StudentService.KO(reason) => complete(StatusCodes.BadRequest -> reason)
                 }
               }
             }
@@ -52,7 +45,7 @@ class StudentRoutes(buildJobRepository: ActorRef[StudentService.Command])(implic
             buildJobRepository.ask(StudentService.DeleteStudent(id, _))
           onSuccess(operationPerformed) {
             case StudentService.OK => complete("Student deleted")
-            case StudentService.KO(reason) => complete(StatusCodes.InternalServerError -> reason)
+            case StudentService.KO(reason) => complete(StatusCodes.BadRequest -> reason)
           }
         }
       )
