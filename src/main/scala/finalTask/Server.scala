@@ -6,26 +6,14 @@ import akka.actor.typed.{ActorSystem, Behavior, PostStop}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.stream.ActorMaterializer
-import finalTask.dao.{H2DBComponent, StudentRepository}
+import finalTask.dao.{H2DBComponent, StudentRepository, Tables}
 import finalTask.rest.StudentRoutes
 import finalTask.service.StudentService
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
 
-/**
- * $ curl -d {\"name\":\"Adam\"} -H "Content-Type: application/json" -X POST localhost:8080/students
- * Student added
- *
- * $ curl localhost:8080/students/1
- * {"id":1,"name":"Adam"}
- *
- * $ curl -X DELETE localhost:8080/students/1
- * Student deleted
- *
- * $ curl localhost:8080/students/1
- * The requested resource could not be found.
- */
+
 object Server {
 
   sealed trait Message
@@ -44,7 +32,8 @@ object Server {
     implicit val ec: ExecutionContextExecutor = ctx.system.executionContext
 
     val dbComponent = H2DBComponent()
-    val studentRepository = StudentRepository(dbComponent)
+    val tables = new Tables(dbComponent)
+    val studentRepository = StudentRepository(dbComponent, tables)
     val buildStudentService = ctx.spawn(StudentService(studentRepository), "StudentService")
     val routes = new StudentRoutes(buildStudentService)
 

@@ -3,9 +3,10 @@ package finalTask.dao
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-class StudentRepository(dbComponent: DBComponent) {
+class StudentRepository(dbComponent: DBComponent, tables: Tables) {
 
   import dbComponent.driver.api._
+  import tables.students
 
   private val db = dbComponent.db
 
@@ -27,13 +28,11 @@ class StudentRepository(dbComponent: DBComponent) {
 
   private object Query {
 
-    val students = TableQuery[Students]
-
     val createSchema = students.schema.create
 
     val studentById = students.findBy(_.id)
 
-    def studentByName(name: String) = students.filter(_.name === name)
+    def studentByName(name: String) = tables.students.filter(_.name === name)
 
     // Return the student with it's auto incremented id instead of an insert count
     val writeStudents = students returning students
@@ -45,8 +44,8 @@ class StudentRepository(dbComponent: DBComponent) {
 }
 
 object StudentRepository {
-  def apply(dbComponent: DBComponent): StudentRepository = {
-    val repository = new StudentRepository(dbComponent)
+  def apply(dbComponent: DBComponent, tables: Tables): StudentRepository = {
+    val repository = new StudentRepository(dbComponent, tables)
     Await.result(repository.init(), Duration.Inf)
     repository
   }
