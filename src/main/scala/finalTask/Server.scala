@@ -38,7 +38,7 @@ object Server {
     val routes = new StudentRoutes(buildStudentService)
 
     val serverBinding: Future[Http.ServerBinding] =
-      Http.apply().bindAndHandle(routes.theJobRoutes, host, port)
+      Http.apply().bindAndHandle(routes.theStudentRoutes, host, port)
     ctx.pipeToSelf(serverBinding) {
       case Success(binding) => Started(binding)
       case Failure(ex) => StartFailed(ex)
