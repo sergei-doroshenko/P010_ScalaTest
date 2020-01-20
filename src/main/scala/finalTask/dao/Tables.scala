@@ -29,5 +29,8 @@ class Courses(tag: Tag) extends Table[Course](tag, "courses") {
   def id: Rep[Int] = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def name: Rep[String] = column[String]("name")
   override def * : ProvenShape[Course] = (id.?, name) <> (Course.tupled, Course.unapply)
+  def teacherId = column[Int]("teacher_id")
+  val teachers = TableQuery[Teachers]
+  def teacher = foreignKey("teachers_fk", teacherId, teachers)(_.id, onUpdate=ForeignKeyAction.Restrict, onDelete=ForeignKeyAction.Cascade)
 }
 
