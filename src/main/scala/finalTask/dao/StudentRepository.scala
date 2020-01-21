@@ -12,6 +12,8 @@ class StudentRepository(dbComponent: DBComponent, tables: Tables) {
 
   def init(): Future[Unit] = db.run(Query.createSchema)
 
+  def findAll():Future[Seq[Student]] = db.run(Query.all)
+
   def findStudentById(id: Int): Future[Option[Student]] =
     db.run(Query.studentById(id).result.headOption)
 
@@ -30,9 +32,11 @@ class StudentRepository(dbComponent: DBComponent, tables: Tables) {
 
     val createSchema = students.schema.create
 
+    val all = students.result
+
     val studentById = students.findBy(_.id)
 
-    def studentByName(name: String) = tables.students.filter(_.name === name)
+    def studentByName(name: String) = students.filter(_.name === name)
 
     // Return the student with it's auto incremented id instead of an insert count
     val writeStudents = students returning students

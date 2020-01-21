@@ -16,30 +16,18 @@ class StudentService(studentRepository: StudentRepository) {
 
 object StudentService {
 
-  // Definition of the a build job and its possible status values
-  sealed trait Status
-
-  object Successful extends Status
-
-  object Failed extends Status
-
-  // Trait defining successful and failure responses
-  sealed trait Response
-
-  case object OK extends Response
-
-  final case class KO(reason: String) extends Response
-
   // Trait and its implementations representing all possible messages that can be sent to this Behavior
-  sealed trait Command
+  sealed trait StudentCommand
 
-  final case class AddStudent(student: Student, replyTo: ActorRef[Response]) extends Command
+  final case class AddStudent(student: Student, replyTo: ActorRef[Response]) extends StudentCommand
 
-  final case class GetStudentById(id: Int, replyTo: ActorRef[Option[Student]]) extends Command
+  final case class GetAll(replyTo: ActorRef[Seq[Student]]) extends StudentCommand
 
-  final case class DeleteStudent(id: Int, replyTo: ActorRef[Response]) extends Command
+  final case class GetStudentById(id: Int, replyTo: ActorRef[Option[Student]]) extends StudentCommand
 
-  def apply(studentRepository: StudentRepository): Behavior[Command] =
+  final case class DeleteStudent(id: Int, replyTo: ActorRef[Response]) extends StudentCommand
+
+  def apply(studentRepository: StudentRepository): Behavior[StudentCommand] =
     Behaviors.setup { ctx =>
       implicit val ec: ExecutionContextExecutor = ctx.system.executionContext
 
@@ -59,9 +47,15 @@ object StudentService {
                 replyTo ! KO("Student already exists")
               } else {
                 studentRepository.insertStudent(student)
-                replyTo ! OK
+                replyTo ! OK("Success")
               }
             case Failure(e) => replyTo ! KO(e.getMessage)
+          }
+          Behaviors.same
+        case GetAll(replyTo) =>
+          studentRepository.findAll().onComplete {
+            case Success(value) => replyTo ! value
+            case Failure(exception) => replyTo ! Seq.empty
           }
           Behaviors.same
         case GetStudentById(id, replyTo) =>
@@ -72,7 +66,7 @@ object StudentService {
           Behaviors.same
         case DeleteStudent(id, replyTo) =>
           studentRepository.deleteStudentById(id).onComplete {
-            case Success(value) => replyTo ! OK
+            case Success(value) => replyTo ! OK(s"Deleted: ${value}")
             case Failure(e) => replyTo ! KO(e.getMessage)
           }
           Behaviors.same

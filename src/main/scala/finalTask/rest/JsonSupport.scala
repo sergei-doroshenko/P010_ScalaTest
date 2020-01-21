@@ -1,8 +1,8 @@
 package finalTask.rest
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import finalTask.dao.Student
-import finalTask.service.StudentService.{Failed, Status, Successful}
+import finalTask.dao.{Course, Student, Teacher}
+import finalTask.service.{Failed, Status, Successful}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat}
 
 trait JsonSupport extends SprayJsonSupport {
@@ -21,5 +21,7 @@ trait JsonSupport extends SprayJsonSupport {
   }
 
   import DefaultJsonProtocol._
-  implicit val studentFormat = jsonFormat(Student, "id", "name")
+  implicit val studentFormat = jsonFormat2(Student)
+  implicit val teacherFormat = jsonFormat2(Teacher)
+  implicit val courseFormat = jsonFormat3(Course)
 }

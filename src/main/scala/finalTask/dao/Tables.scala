@@ -6,7 +6,7 @@ case class Student(id: Option[Int] = None, name: String)
 
 case class Teacher(id: Option[Int] = None, name: String)
 
-case class Course(id: Option[Int] = None, name: String)
+case class Course(id: Option[Int] = None, name: String, teacherId: Int)
 
 class Tables(val dbComponent: DBComponent) {
 
@@ -40,9 +40,9 @@ class Tables(val dbComponent: DBComponent) {
 
     def name: Rep[String] = column[String]("name")
 
-    override def * : ProvenShape[Course] = (id.?, name) <> (Course.tupled, Course.unapply)
-
     def teacherId = column[Int]("teacher_id")
+
+    override def * : ProvenShape[Course] = (id.?, name, teacherId) <> (Course.tupled, Course.unapply)
 
     def teacher = foreignKey("teachers_fk", teacherId, teachers)(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)
   }

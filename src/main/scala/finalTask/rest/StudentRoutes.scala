@@ -6,12 +6,13 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import finalTask.dao.Student
-import finalTask.service.StudentService
+import finalTask.service.{KO, OK, Response, StudentService}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import spray.json.DefaultJsonProtocol._
 
-class StudentRoutes(buildJobRepository: ActorRef[StudentService.Command])(implicit system: ActorSystem[_]) extends JsonSupport {
+class StudentRoutes(studentService: ActorRef[StudentService.StudentCommand])(implicit system: ActorSystem[_]) extends JsonSupport {
 
   import akka.actor.typed.scaladsl.AskPattern._
 
@@ -21,31 +22,38 @@ class StudentRoutes(buildJobRepository: ActorRef[StudentService.Command])(implic
     concat(
       post {
         entity(as[Student]) { student =>
-          val operationPerformed: Future[StudentService.Response] =
-            buildJobRepository.ask(StudentService.AddStudent(student, _))
+          val operationPerformed: Future[Response] =
+            studentService.ask(StudentService.AddStudent(student, _))
           onSuccess(operationPerformed) {
-            case StudentService.OK => complete("Student added")
-            case StudentService.KO(reason) => complete(StatusCodes.BadRequest -> reason)
+            case OK(msg) => complete(s"Student added: ${msg}")
+            case KO(reason) => complete(StatusCodes.BadRequest -> reason)
           }
         }
       }
     )
   }
 
-  val getStudentRoute = (get & path(IntNumber)) { id =>
+  val getAllStudentsRoute = get {
+    val all = studentService.ask(StudentService.GetAll)
+    rejectEmptyResponse {
+      complete(all)
+    }
+  }
+
+  val getOneStudentRoute = (get & path(IntNumber)) { id =>
     val maybeStudent: Future[Option[Student]] =
-      buildJobRepository.ask(StudentService.GetStudentById(id, _))
+      studentService.ask(StudentService.GetStudentById(id, _))
     rejectEmptyResponse {
       complete(maybeStudent)
     }
   }
 
   val deleteStudentRoute = (delete & path(IntNumber)) { id =>
-    val operationPerformed: Future[StudentService.Response] =
-      buildJobRepository.ask(StudentService.DeleteStudent(id, _))
+    val operationPerformed: Future[Response] =
+      studentService.ask(StudentService.DeleteStudent(id, _))
     onSuccess(operationPerformed) {
-      case StudentService.OK => complete("Student deleted")
-      case StudentService.KO(reason) => complete(StatusCodes.BadRequest -> reason)
+      case OK(msg) => complete(s"Student deleted: ${msg}")
+      case KO(reason) => complete(StatusCodes.BadRequest -> reason)
     }
   }
 
@@ -53,7 +61,8 @@ class StudentRoutes(buildJobRepository: ActorRef[StudentService.Command])(implic
     pathPrefix("students") {
       concat(
         addStudentRoute,
-        getStudentRoute,
+        getAllStudentsRoute,
+        getOneStudentRoute,
         deleteStudentRoute
       )
     }

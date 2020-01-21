@@ -5,10 +5,12 @@ import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.{ActorSystem, Behavior, PostStop}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import finalTask.dao.{H2DBComponent, StudentRepository, Tables}
-import finalTask.rest.StudentRoutes
-import finalTask.service.StudentService
+import finalTask.dao.{CourseRepository, H2DBComponent, StudentRepository, Tables, TeacherRepository}
+import finalTask.rest.{StudentRoutes, TeacherRoutes}
+import finalTask.service.{StudentService, TeacherService}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
@@ -34,11 +36,16 @@ object Server {
     val dbComponent = H2DBComponent()
     val tables = new Tables(dbComponent)
     val studentRepository = StudentRepository(dbComponent, tables)
-    val buildStudentService = ctx.spawn(StudentService(studentRepository), "StudentService")
-    val routes = new StudentRoutes(buildStudentService)
+    val teacherRepository = TeacherRepository(dbComponent, tables)
+    val courseRepository = CourseRepository(dbComponent, tables)
+    val studentServiceActor = ctx.spawn(StudentService(studentRepository), "StudentService")
+    val teacherServiceActor = ctx.spawn(TeacherService(teacherRepository), "TeacherService")
+    val studentRoutes = new StudentRoutes(studentServiceActor)
+    val teacherRoutes = new TeacherRoutes(teacherServiceActor)
 
-    val serverBinding: Future[Http.ServerBinding] =
-      Http.apply().bindAndHandle(routes.theStudentRoutes, host, port)
+    val routes: Route = studentRoutes.theStudentRoutes ~ teacherRoutes.theTeacherRoutes
+
+    val serverBinding: Future[Http.ServerBinding] = Http.apply().bindAndHandle(routes, host, port)
     ctx.pipeToSelf(serverBinding) {
       case Success(binding) => Started(binding)
       case Failure(ex) => StartFailed(ex)
