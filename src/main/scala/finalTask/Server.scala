@@ -9,8 +9,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import finalTask.dao.{CourseRepository, H2DBComponent, StudentRepository, Tables, TeacherRepository}
-import finalTask.rest.{StudentRoutes, TeacherRoutes}
-import finalTask.service.{StudentService, TeacherService}
+import finalTask.rest.{CourseRoutes, StudentRoutes, TeacherRoutes}
+import finalTask.service.{CourseService, StudentService, TeacherService}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
@@ -40,10 +40,12 @@ object Server {
     val courseRepository = CourseRepository(dbComponent, tables)
     val studentServiceActor = ctx.spawn(StudentService(studentRepository), "StudentService")
     val teacherServiceActor = ctx.spawn(TeacherService(teacherRepository), "TeacherService")
+    val courseServiceActor = ctx.spawn(CourseService(courseRepository), "CourseService")
     val studentRoutes = new StudentRoutes(studentServiceActor)
     val teacherRoutes = new TeacherRoutes(teacherServiceActor)
+    val courseRoutes = new CourseRoutes(courseServiceActor)
 
-    val routes: Route = studentRoutes.theStudentRoutes ~ teacherRoutes.theTeacherRoutes
+    val routes: Route = studentRoutes.theStudentRoutes ~ teacherRoutes.theTeacherRoutes ~ courseRoutes.theCourseRoutes
 
     val serverBinding: Future[Http.ServerBinding] = Http.apply().bindAndHandle(routes, host, port)
     ctx.pipeToSelf(serverBinding) {

@@ -20,3 +20,17 @@ Result: `Student deleted`
 $ curl localhost:8080/students/1
 ```  
 Result: `The requested resource could not be found.`
+
+## Courses
+Insert teacher:  
+```bash
+$ curl -d {\"name\":\"MrFergusson\"} -H "Content-Type: application/json" -X POST localhost:8080/teachers
+```  
+Insert course:  
+```bash
+$ curl -d {\"name\":\"Mathimatics\",\"teacherId\":1} -H "Content-Type: application/json" -X POST localhost:8080/courses
+```  
+Fetch all course with teachers:  
+```bash
+$ curl localhost:8080/courses
+```
