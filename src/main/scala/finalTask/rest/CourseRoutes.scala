@@ -4,8 +4,9 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import finalTask.dao.{Course, Teacher}
+import finalTask.dao.Course
 import finalTask.service.CourseService
+import finalTask.service.CourseService.CourseResponse
 import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Future
@@ -31,7 +32,7 @@ class CourseRoutes(courseServiceActor: ActorRef[CourseService.CourseCommand])(im
           }
         },
         get {
-          val courseList: Future[Seq[(Course, Teacher)]] = courseServiceActor.ask(CourseService.GetAllCourses)
+          val courseList: Future[Seq[CourseResponse]] = courseServiceActor.ask(CourseService.GetAllCourses)
           rejectEmptyResponse {
             complete(courseList)
           }
