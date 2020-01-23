@@ -48,6 +48,16 @@ class Tables(val dbComponent: DBComponent) {
   }
 
   val courses = TableQuery[Courses]
+
+  class StudentCourses(tag: Tag) extends Table[(Int, Int, Option[String])](tag, "student_courses") {
+    def studentId = column[Int]("student_id")
+    def courseId = column[Int]("course_id")
+    def feedback = column[Option[String]]("feedback")
+    override def * = (studentId, courseId, feedback)
+    def pk = primaryKey("pk_student_courses", (studentId, courseId))
+  }
+
+  val studentCourses = TableQuery[StudentCourses]
 }
 
 

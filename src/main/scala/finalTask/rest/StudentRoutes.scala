@@ -7,10 +7,10 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import finalTask.dao.Student
 import finalTask.service.{KO, OK, Response, StudentService}
+import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import spray.json.DefaultJsonProtocol._
 
 class StudentRoutes(studentService: ActorRef[StudentService.StudentCommand])(implicit system: ActorSystem[_]) extends JsonSupport {
 
@@ -63,7 +63,16 @@ class StudentRoutes(studentService: ActorRef[StudentService.StudentCommand])(imp
         addStudentRoute,
         getAllStudentsRoute,
         getOneStudentRoute,
-        deleteStudentRoute
+        deleteStudentRoute,
+        (post & path(IntNumber / "courses")) { studentId =>
+          entity(as[Map[String, Int]]) { param =>
+            val response: Future[Response] = studentService.ask(StudentService.AddCourse(studentId, param("courseId"), _))
+            onSuccess(response) {
+              case OK(msg) => complete(msg)
+              case KO(reason) => complete(StatusCodes.BadRequest -> reason)
+            }
+          }
+        }
       )
     }
 }

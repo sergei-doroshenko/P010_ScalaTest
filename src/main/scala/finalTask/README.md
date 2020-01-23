@@ -1,5 +1,5 @@
 # Http REST application
-### curl commands
+### Students
 ```bash
 $ curl -d {\"name\":\"Adam\"} -H "Content-Type: application/json" -X POST localhost:8080/students
 ```  
@@ -33,4 +33,14 @@ $ curl -d {\"name\":\"Mathimatics\",\"teacherId\":1} -H "Content-Type: applicati
 Fetch all course with teachers:  
 ```bash
 $ curl localhost:8080/courses
+```  
+Create student:  
+```bash
+$ curl -d {\"name\":\"Adam\"} -H "Content-Type: application/json" -X POST localhost:8080/students
+```  
+Result: `Student added: Success`  
+Add course to student:  
+```bash
+$ curl -d {\"courseId\":1} -H "Content-Type: application/json" -X POST localhost:8080/students/1/courses
 ```
+
