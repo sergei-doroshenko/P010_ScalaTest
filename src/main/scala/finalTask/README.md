@@ -1,4 +1,8 @@
 # Http REST application
+### Scripts  
+For testing use:  
+1. [final_task_test.bat](final_task_test.bat)
+2. [final_task_test.sh](final_task_test.sh)  
 ### Students
 ```bash
 $ curl -d {\"name\":\"Adam\"} -H "Content-Type: application/json" -X POST localhost:8080/students
