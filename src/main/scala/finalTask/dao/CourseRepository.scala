@@ -6,7 +6,7 @@ import scala.concurrent.{Await, Future}
 class CourseRepository(val dbComponent: DBComponent, val tables: Tables) {
 
   import dbComponent.driver.api._
-  import tables.{courses, teachers}
+  import tables.{courses, studentCourses, teachers}
 
   private val db = dbComponent.db
 

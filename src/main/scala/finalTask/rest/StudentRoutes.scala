@@ -6,6 +6,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import finalTask.dao.Student
+import finalTask.service.StudentService.{CourseEvaluation, StudentCoursesOverview}
 import finalTask.service.{KO, OK, Response, StudentService}
 import spray.json.DefaultJsonProtocol._
 
@@ -67,6 +68,15 @@ class StudentRoutes(studentService: ActorRef[StudentService.StudentCommand])(imp
         (post & path(IntNumber / "courses")) { studentId =>
           entity(as[Map[String, Int]]) { param =>
             val response: Future[Response] = studentService.ask(StudentService.AddCourse(studentId, param("courseId"), _))
+            onSuccess(response) {
+              case OK(msg) => complete(msg)
+              case KO(reason) => complete(StatusCodes.BadRequest -> reason)
+            }
+          }
+        },
+        (put & path(IntNumber / "courses")) { studentId =>
+          entity(as[CourseEvaluation]) { param =>
+            val response: Future[Response] = studentService.ask(StudentService.EvaluateCourse(studentId, param, _))
             onSuccess(response) {
               case OK(msg) => complete(msg)
               case KO(reason) => complete(StatusCodes.BadRequest -> reason)

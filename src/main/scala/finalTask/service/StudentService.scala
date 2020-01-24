@@ -29,7 +29,13 @@ object StudentService {
 
   final case class AddCourse(studentId: Int, courseId: Int, replyTo: ActorRef[Response]) extends StudentCommand
 
-  final case class StudentResponse(id: Int, name: String, courses: List[String])
+  final case class CourseEvaluation(courseId: Int, feedback: String)
+
+  final case class EvaluateCourse(studentId: Int, courseEvaluation: CourseEvaluation, replyTo: ActorRef[Response]) extends StudentCommand
+
+  final case class StudentResponse(id: Int, name: String, courses: List[StudentCoursesOverview])
+
+  final case class StudentCoursesOverview(name: String, teacher: String, feedback: Option[String])
 
   def apply(studentRepository: StudentRepository): Behavior[StudentCommand] =
     Behaviors.setup { ctx =>
@@ -65,7 +71,10 @@ object StudentService {
                 .map(tuple => StudentResponse(
                   tuple._1._1,
                   tuple._1._2,
-                  tuple._2.filter(_._3.isDefined).map(_._3.get).toList
+                  tuple._2
+                    .filter(e => e._3.isDefined && e._4.isDefined)
+                    .map(f => StudentCoursesOverview(f._3.get, f._4.get, f._5.flatten))
+                    .toList
                 ))
                 .toSeq
             }
@@ -90,6 +99,12 @@ object StudentService {
               replyTo ! OK(s"Student: ${studentId} successfully subscribed to course: ${courseId}, subscription: ${id}")
             case Failure(e) =>
               replyTo ! KO(s"Can't subscribe student: ${studentId} to course: ${courseId} due to ${e.getMessage}")
+          }
+          Behaviors.same
+        case EvaluateCourse(studentId, e, replyTo) =>
+          studentRepository.evaluateCourse(studentId, e.courseId, e.feedback).onComplete {
+            case Success(id) => replyTo ! OK(s"Feedback added ${id}")
+            case Failure(exception) => replyTo ! KO(s"Failed to evaluate course due to: ${exception.getMessage}")
           }
           Behaviors.same
       }
