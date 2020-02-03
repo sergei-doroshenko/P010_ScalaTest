@@ -30,5 +30,6 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies += "com.typesafe" % "config" % "1.3.4"
+libraryDependencies += "dev.zio" %% "zio" % "1.0.0-RC17"
 
 scalacOptions += "-deprecation"

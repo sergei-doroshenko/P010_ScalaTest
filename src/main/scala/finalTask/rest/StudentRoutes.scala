@@ -27,7 +27,8 @@ class StudentRoutes(studentService: ActorRef[StudentService.StudentCommand])(imp
             studentService.ask(StudentService.AddStudent(student, _))
           onSuccess(operationPerformed) {
             case OK(msg) => complete(s"Student added: ${msg}")
-            case KO(reason) => complete(StatusCodes.BadRequest -> reason)
+//            case KO(reason) => complete(StatusCodes.BadRequest -> reason)
+            case KO(reason) => throw new RuntimeException(reason)
           }
         }
       }

@@ -5,8 +5,9 @@ import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.{ActorSystem, Behavior, PostStop}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
 import finalTask.dao.{CourseRepository, H2DBComponent, StudentRepository, Tables, TeacherRepository}
 import finalTask.rest.{CourseRoutes, StudentRoutes, TeacherRoutes}
@@ -45,7 +46,13 @@ object Server {
     val teacherRoutes = new TeacherRoutes(teacherServiceActor)
     val courseRoutes = new CourseRoutes(courseServiceActor)
 
-    val routes: Route = studentRoutes.theStudentRoutes ~ teacherRoutes.theTeacherRoutes ~ courseRoutes.theCourseRoutes
+    val restExceptionHandler = ExceptionHandler {
+      case e: Exception => complete((StatusCodes.BadRequest, f"Error while request handling: ${e.getMessage}"))
+    }
+
+    val routes: Route = handleExceptions(restExceptionHandler) {
+      concat(studentRoutes.theStudentRoutes, teacherRoutes.theTeacherRoutes, courseRoutes.theCourseRoutes)
+    }
 
     val serverBinding: Future[Http.ServerBinding] = Http.apply().bindAndHandle(routes, host, port)
     ctx.pipeToSelf(serverBinding) {
