@@ -6,14 +6,14 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import finalTask.dao.Student
-import finalTask.service.StudentService.{CourseEvaluation, StudentCoursesOverview}
-import finalTask.service.{KO, LogService, OK, Response, StudentService}
+import finalTask.service.StudentService.{CourseEvaluation}
+import finalTask.service.{KO, OK, Response, StudentService}
 import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class StudentRoutes(studentService: ActorRef[StudentService.StudentCommand], log: LogService)(implicit system: ActorSystem[_]) extends JsonSupport {
+class StudentRoutes(studentService: ActorRef[StudentService.StudentCommand])(implicit system: ActorSystem[_]) extends JsonSupport {
 
   import akka.actor.typed.scaladsl.AskPattern._
 
@@ -26,10 +26,7 @@ class StudentRoutes(studentService: ActorRef[StudentService.StudentCommand], log
           val operationPerformed: Future[Response] =
             studentService.ask(StudentService.AddStudent(student, _))
           onSuccess(operationPerformed) {
-            case OK(msg) =>
-              val message = s"Student added: ${msg}"
-              log.info(message)
-              complete(message)
+            case OK(msg) => complete(s"Student added: ${msg}")
 //            case KO(reason) => complete(StatusCodes.BadRequest -> reason)
             case KO(reason) => throw new RuntimeException(reason)
           }
@@ -57,7 +54,7 @@ class StudentRoutes(studentService: ActorRef[StudentService.StudentCommand], log
     val operationPerformed: Future[Response] =
       studentService.ask(StudentService.DeleteStudent(id, _))
     onSuccess(operationPerformed) {
-      case OK(msg) => complete(s"Student deleted: ${msg}")
+      case OK(msg) => complete(s"Student deleted: $msg")
       case KO(reason) => complete(StatusCodes.BadRequest -> reason)
     }
   }

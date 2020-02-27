@@ -2,9 +2,9 @@ package finalTask.service
 
 import java.io.{BufferedWriter, File, FileWriter, IOException, PrintWriter}
 
-import zio.{DefaultRuntime, ZIO}
+import zio.{DefaultRuntime, Runtime, ZIO}
 
-class LogService(val filename: String) {
+class LogService(val filename: String, val runtime: Runtime[_]) {
 
   def writeToFile(s: String): Unit = {
     val file = new File(filename)
@@ -18,18 +18,18 @@ class LogService(val filename: String) {
         out.flush()
       } catch {
         case e: IOException => println(e)
-        //exception handling left as an exercise for the reader
+        //TODO: exception handling
       }
     }
   }
 
   def info(msg: String): Unit = {
-    val runtime = new DefaultRuntime {}
-    val task = ZIO.effect(writeToFile(msg))
+    val task = ZIO.effect(writeToFile(s"INFO: $msg"))
     runtime.unsafeRun(task)
   }
 }
 
 object LogService {
-  def apply(filename: String): LogService = new LogService(filename)
+  def apply(): LogService = new LogService("app.log", new DefaultRuntime {})
+  def apply(filename: String, runtime: Runtime[_]): LogService = new LogService(filename, runtime)
 }

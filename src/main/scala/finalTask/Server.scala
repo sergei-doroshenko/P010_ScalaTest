@@ -9,7 +9,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
-import finalTask.dao.{CourseRepository, H2DBComponent, StudentRepository, Tables, TeacherRepository}
+import finalTask.dao._
 import finalTask.rest.{CourseRoutes, StudentRoutes, TeacherRoutes}
 import finalTask.service.{CourseService, LogService, StudentService, TeacherService}
 
@@ -42,17 +42,22 @@ object Server {
     val studentServiceActor = ctx.spawn(StudentService(studentRepository), "StudentService")
     val teacherServiceActor = ctx.spawn(TeacherService(teacherRepository), "TeacherService")
     val courseServiceActor = ctx.spawn(CourseService(courseRepository), "CourseService")
-    val logService = LogService("app.log");
-    val studentRoutes = new StudentRoutes(studentServiceActor, logService)
+    val studentRoutes = new StudentRoutes(studentServiceActor)
     val teacherRoutes = new TeacherRoutes(teacherServiceActor)
     val courseRoutes = new CourseRoutes(courseServiceActor)
+    val logService = LogService()
 
     val restExceptionHandler = ExceptionHandler {
       case e: Exception => complete((StatusCodes.BadRequest, f"Error while request handling: ${e.getMessage}"))
     }
 
     val routes: Route = handleExceptions(restExceptionHandler) {
-      concat(studentRoutes.theStudentRoutes, teacherRoutes.theTeacherRoutes, courseRoutes.theCourseRoutes)
+      extractRequest { req =>
+        entity(as[String]) { payload =>
+          logService.info(s"${req.method.name}: ${req.uri.path} payload: $payload")
+          concat(studentRoutes.theStudentRoutes, teacherRoutes.theTeacherRoutes, courseRoutes.theCourseRoutes)
+        }
+      }
     }
 
     val serverBinding: Future[Http.ServerBinding] = Http.apply().bindAndHandle(routes, host, port)
