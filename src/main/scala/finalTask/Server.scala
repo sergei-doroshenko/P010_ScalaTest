@@ -11,7 +11,7 @@ import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import akka.stream.ActorMaterializer
 import finalTask.dao.{CourseRepository, H2DBComponent, StudentRepository, Tables, TeacherRepository}
 import finalTask.rest.{CourseRoutes, StudentRoutes, TeacherRoutes}
-import finalTask.service.{CourseService, StudentService, TeacherService}
+import finalTask.service.{CourseService, LogService, StudentService, TeacherService}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
@@ -42,7 +42,8 @@ object Server {
     val studentServiceActor = ctx.spawn(StudentService(studentRepository), "StudentService")
     val teacherServiceActor = ctx.spawn(TeacherService(teacherRepository), "TeacherService")
     val courseServiceActor = ctx.spawn(CourseService(courseRepository), "CourseService")
-    val studentRoutes = new StudentRoutes(studentServiceActor)
+    val logService = LogService("app.log");
+    val studentRoutes = new StudentRoutes(studentServiceActor, logService)
     val teacherRoutes = new TeacherRoutes(teacherServiceActor)
     val courseRoutes = new CourseRoutes(courseServiceActor)
 
